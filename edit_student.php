@@ -1,22 +1,37 @@
 <?php
 include 'db.php';
 $message = "";
+$student = ['ID' => '', 'name' => '', 'email' => '', 'course' => ''];
 
-$result = mysqli_query($conn, "SELECT id, name, email, course FROM info");
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+    $fetch_sql = "SELECT * FROM info WHERE ID = $id"; 
+    $res = mysqli_query($conn, $fetch_sql);
+    
+    if ($res && mysqli_num_rows($res) > 0) {
+        $student = mysqli_fetch_assoc($res);
+    } else {
+        $message = "Student record not found.";
+    }
+}
+
 if (isset($_POST['edit'])) {
-    $id = $_POST['id'];
+    $id = $_POST['id']; 
     $name = $_POST['name'];
-    $email     = $_POST['email'];
+    $email = $_POST['email'];
     $course = $_POST['course'];
 
-  if ($id == "" || $name == "" || $email == "") {
-    $message = "ID, Name, and Email are required!";
-  } else {
-    $sql = "UPDATE students SET id='$id', name='$name', email='$email', course='$course' WHERE id=$id";
-    mysqli_query($conn, $sql);
-    header("Location: index.php");
-    exit;
-  }
+    if ($id == "" || $name == "" || $email == "") {
+        $message = "All fields are required!";
+    } else {
+        $sql = "UPDATE info SET name='$name', email='$email', course='$course' WHERE ID=$id";
+        if (mysqli_query($conn, $sql)) {
+            header("Location: index.php");
+            exit;
+        } else {
+            $message = "Error: " . mysqli_error($conn);
+        }
+    }
 }
 ?>
 
@@ -24,32 +39,29 @@ if (isset($_POST['edit'])) {
 <html lang="en">
 <head>
     <link rel="stylesheet" href="style.css">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Edit Student</title>
 </head>
 <body>
     <h2>Edit Student Record</h2>
     <form action="edit_student.php" method="POST">
         <?php if ($message): ?>
-            <div class="error-msg"><?php echo $message; ?></div>
-        <?php endif; ?>s
+            <div class="error-msg" style="color: red;"><?php echo $message; ?></div>
+        <?php endif; ?>
+
         <label for="id">ID:</label>
-        <input type="text" id="id" name="id" required>
-        <?php echo isset($_POST['id']) ? $_POST['id'] : ''; ?><br><br>
+        <input type="text" id="id" name="id" value="<?php echo $student['ID']; ?>" readonly><br><br>
 
         <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required>
-        <?php echo isset($_POST['name']) ? $_POST['name'] : ''; ?><br><br>
+        <input type="text" id="name" name="name" value="<?php echo $student['name']; ?>" required><br><br>
         
         <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
-        <?php echo isset($_POST['email']) ? $_POST['email'] : ''; ?><br><br>
+        <input type="email" id="email" name="email" value="<?php echo $student['email']; ?>" required><br><br>
         
         <label for="course">Course:</label>
-        <input type="text" id="course" name="course" required>
-        <?php echo isset($_POST['course']) ? $_POST['course'] : ''; ?><br><br>
+        <input type="text" id="course" name="course" value="<?php echo $student['course']; ?>" required><br><br>
         
-        <input type="submit" value="Save Student" name="edit">
+        <input type="submit" value="Update Student" name="edit">
+        <a href="index.php">Cancel</a>
+    </form>
 </body>
 </html>
